@@ -5,7 +5,7 @@ SRCDIR = src
 BINDIR = bin
 
 
-all: lj_2d lj_3d
+all: lj_2d lj_3d linked_cell_2d
 
 lj_2d: $(SRCDIR)/lj_2d.cpp
 	mkdir -p $(BINDIR)
@@ -14,7 +14,10 @@ lj_2d: $(SRCDIR)/lj_2d.cpp
 lj_3d: $(SRCDIR)/lj_3d.cpp
 	mkdir -p $(BINDIR) 
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
-	
+
+linked_cell_2d: $(SRCDIR)/linked_cell_2d.cpp
+	mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
 clean:
 	rm -rf $(BINDIR)/*
 

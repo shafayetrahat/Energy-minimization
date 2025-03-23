@@ -18,16 +18,18 @@ Output:
 #include <fstream>
 #include <cmath>
 #include <string>
+#include <chrono> // Include the chrono library for timing
+
 
 // Constants
 constexpr double sigma = 1.0;
 constexpr double epsilon = 1.0;
 constexpr double mass = 1.0;
 //constexpr double kB = 1.0;
-constexpr int N = 20; // number of particles
+constexpr int N = 500; // number of particles
 constexpr int steps = 1e6; // number of steps
 constexpr double dt = 1e-4; // time step
-constexpr double L = 10.0; // box length
+constexpr double L = 50.0; // box length
 constexpr double rc = 2.5; // cut-off distance
 //constexpr double T = 1.0;
 constexpr int output_freq = 100; // output frequency
@@ -117,6 +119,7 @@ constexpr void initialize_velocities(int n, double *vx, double *vy)
 // function to calculate the distance between two particles with PBC
 double distance(double x1, double y1, double x2, double y2, double L)
 {
+    
     double dx = x2 - x1;
     double dy = y2 - y1;
     dx -= L * round(dx / L);
@@ -377,8 +380,15 @@ int main()
     char lattice_type = 't';
     std::string outdir = "run/"; //If you want to change the output directory, don't forget to change the output directory in the makefile in "test"
     std::string basename = outdir+"lj_2d";
+    auto start = std::chrono::high_resolution_clock::now();
+
     run_simulation(N, steps, dt, L, rc, 1.0, output_freq, 12345, x, y, vx, vy, lattice_type, basename);
+    // End timing
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
     
+    std::cout << "Simulation completed in " << elapsed.count() << " seconds." << std::endl;
+
     bool use_pbc = false;
     minimize_energy(N, L, rc, x, y, vx, vy, use_pbc, 1e-1, basename );
 
