@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <chrono>
 
 
 
@@ -377,7 +378,14 @@ int main()
     std::string outdir = "run/"; //If you want to change the output directory, don't forget to change the output directory in the makefile in "test"
     std::string basename = outdir+"lj_3d";
 
+    auto start = std::chrono::high_resolution_clock::now();
     run_simulation(N, steps, dt, L, rc, 1.0, output_freq, 12345, x, y, z, vx, vy, vz, use_pbc,basename);
+    // End timing
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+ 
+    std::cout << "Simulation completed in " << elapsed.count() << " seconds." << std::endl;
+ 
     use_pbc = false;
     minimize_energy(N, L, rc, x, y, z, vx, vy, vz,use_pbc,basename);
 
