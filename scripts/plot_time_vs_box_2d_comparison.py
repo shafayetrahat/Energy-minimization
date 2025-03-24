@@ -26,15 +26,6 @@ plt.figure(figsize=(10, 6))
 plt.plot(df['box_size'], df['time'], 'ro-', alpha=0.9, markersize=8)
 plt.plot(df1['box_size'], df1['time'], 'go-', alpha=0.8, markersize=8)
 
-# Add particle number labels to each point
-# for i, row in df.iterrows():
-#     plt.annotate(f'N={row["particle_number"]}', 
-#                  (row['box_size'], row['time']),
-#                  textcoords="offset points",
-#                  xytext=(0, 10),
-#                  ha='center',
-#                  fontsize=9)
-
 # Add labels and title
 plt.xlabel('Box Size(Area)', fontsize=12)
 plt.ylabel('Time(sec)', fontsize=12)
