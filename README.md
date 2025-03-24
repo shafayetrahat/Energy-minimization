@@ -11,7 +11,11 @@ make test
 ### Simulation of Lennard-Jones naive algorithm in 2d. The total particles are 20, 30, 40.
 
 https://github.com/user-attachments/assets/f04f9054-8472-4362-8471-31572d6f0beb
-https://github.com/user-attachments/assets/f04f9054-8472-4362-8471-31572d6f0beb](https://github.com/user-attachments/assets/9d4f7efb-3027-4f0a-a12a-9da4056e424d
+
+https://github.com/user-attachments/assets/f04f9054-8472-4362-8471-31572d6f0beb
+
+https://github.com/user-attachments/assets/9d4f7efb-3027-4f0a-a12a-9da4056e424d
+
 https://github.com/user-attachments/assets/610a6f66-6751-4d8e-a949-b986ff2cff3f
 
 
