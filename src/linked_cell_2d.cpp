@@ -5,23 +5,35 @@
 #include <vector>
 
 // Constants
-constexpr double sigma = 1.0;
-constexpr double epsilon = 1.0;
-constexpr double mass = 1.0;
-constexpr int N = 500; // number of particles
-constexpr int steps = 1e6; // number of steps
-constexpr double dt = 1e-4; // time step
-constexpr double L = 50.0; // box length
-constexpr double rc = 2.5; // cut-off distance
-constexpr int output_freq = 100; // output frequency
+double sigma = 1.0;
+double epsilon = 1.0;
+double mass = 1.0;
+int N = 40; // number of particles
+int steps = 1e6; // number of steps
+double dt = 1e-4; // time step
+double L = 10.0; // box length
+double rc = 2.4; // cut-off distance
+int output_freq = 200; // output frequency
+char lattice_type = 't'; // lattice type ('t' for triangular, 's' for square)
 
 // Linked Cell Algorithm parameters
-constexpr double cell_size = rc; // cell size equal to cutoff distance
-constexpr int num_cells = static_cast<int>(L / cell_size); // number of cells in each dimension
-constexpr int total_cells = num_cells * num_cells; // total number of cells
+double cell_size = rc + 0.1; // cell size equal to cutoff distance
+int num_cells = static_cast<int>(L / cell_size); // number of cells in each dimension
+int total_cells = num_cells * num_cells; // total number of cells
+
+struct Particle {
+    double x, y, vx, vy;
+};
+
+// Predefined neighboring cell offsets
+const std::vector<std::pair<int, int>> neighbor_offsets = {
+    {-1, -1}, {-1, 0}, {-1, 1},
+    {0, -1}, {0, 0}, {0, 1},
+    {1, -1}, {1, 0}, {1, 1}
+};
 
 // Function to initialize positions in a lattice
-void initialize_positions(int n, double L, double *x, double *y, char lattice_type) {
+void initialize_positions(int n, double L, Particle* particles, char lattice_type) {
     if (lattice_type == 't') {
         int nx = ceil(sqrt(n));
         int ny = (n + nx - 1) / nx;
@@ -31,8 +43,8 @@ void initialize_positions(int n, double L, double *x, double *y, char lattice_ty
         for (int iy = 0; iy < ny; iy++) {
             for (int ix = 0; ix < nx; ix++) {
                 if (i < n) {
-                    x[i] = (ix + 0.5 * iy) * dx;
-                    y[i] = iy * dy;
+                    particles[i].x = (ix + 0.5 * iy) * dx;
+                    particles[i].y = iy * dy;
                     i++;
                 }
             }
@@ -46,8 +58,8 @@ void initialize_positions(int n, double L, double *x, double *y, char lattice_ty
         for (int iy = 0; iy < ny; iy++) {
             for (int ix = 0; ix < nx; ix++) {
                 if (i < n) {
-                    x[i] = ix * dx;
-                    y[i] = iy * dy;
+                    particles[i].x = ix * dx;
+                    particles[i].y = iy * dy;
                     i++;
                 }
             }
@@ -58,22 +70,30 @@ void initialize_positions(int n, double L, double *x, double *y, char lattice_ty
 }
 
 // Function to initialize velocities
-void initialize_velocities(int n, double *vx, double *vy) {
-    double vxcm = 0.0;
-    double vycm = 0.0;
+void initialize_velocities(int n, Particle* particles) {
+    if (n <= 0) return;
+
+    double vxcm = 0.0, vycm = 0.0;
+
     for (int i = 0; i < n; i++) {
-        vx[i] = 1e-1 * (2.0 * rand() / RAND_MAX - 1.0);
-        vy[i] = 1e-1 * (2.0 * rand() / RAND_MAX - 1.0);
-        vxcm += vx[i];
-        vycm += vy[i];
+        // Random velocities between -0.1 and 0.1
+        particles[i].vx = 0.2 * (rand() / (RAND_MAX + 1.0) - 0.5);
+        particles[i].vy = 0.2 * (rand() / (RAND_MAX + 1.0) - 0.5);
+        
+
+        vxcm += particles[i].vx;
+        vycm += particles[i].vy;
     }
+
     vxcm /= n;
     vycm /= n;
+
     for (int i = 0; i < n; i++) {
-        vx[i] -= vxcm;
-        vy[i] -= vycm;
+        particles[i].vx -= vxcm;
+        particles[i].vy -= vycm;
     }
 }
+
 
 // Function to calculate distance with PBC
 double distance(double x1, double y1, double x2, double y2, double L) {
@@ -95,70 +115,67 @@ double lj_force(double r) {
 }
 
 // Function to build the cell list
-void build_cell_list(int n, double L, double *x, double *y, std::vector<int> *cell_list) {
-    for (int i = 0; i < total_cells; i++) {
-        cell_list[i].clear(); // Clear the cell list
+void build_cell_list(int n, double L, Particle* particles, std::vector<std::vector<int>>& cell_list) {
+    
+    for (auto& cell : cell_list) {
+        cell.clear();  // Clear the cell list
     }
 
+    int cell_x = 0, cell_y = 0, cell_index = 0;
+
     for (int i = 0; i < n; i++) {
-        // Ensure positions are within the box [0, L)
-        x[i] = x[i] - L * floor(x[i] / L);
-        y[i] = y[i] - L * floor(y[i] / L);
+        // Apply periodic boundary conditions correctly
+        particles[i].x = fmod(particles[i].x + L, L);
+        particles[i].y = fmod(particles[i].y + L, L);
 
         // Calculate cell indices
-        int cell_x = static_cast<int>(x[i] / cell_size);
-        int cell_y = static_cast<int>(y[i] / cell_size);
+        cell_x = static_cast<int>(particles[i].x / cell_size);
+        cell_y = static_cast<int>(particles[i].y / cell_size);
 
-        // Ensure cell indices are within bounds using modulo
-        cell_x = (cell_x + num_cells) % num_cells;
-        cell_y = (cell_y + num_cells) % num_cells;
+        // Ensure cell indices are within bounds
+        if (cell_x >= num_cells) cell_x = num_cells - 1;
+        if (cell_y >= num_cells) cell_y = num_cells - 1;
 
-        int cell_index = cell_x + cell_y * num_cells;
-
-        if (cell_index >= 0 && cell_index < total_cells) {
-            cell_list[cell_index].push_back(i);
-        } else {
-            std::cerr << "Error: Invalid cell index " << cell_index << " for particle " << i << std::endl;
-        }
+        cell_index = cell_x + cell_y * num_cells;
+        cell_list[cell_index].push_back(i);
     }
 }
 
+
 // Function to calculate forces using the linked cell algorithm
-void calculate_forces_linked_cell(int n, double L, double rc, double *x, double *y, double *fx, double *fy, std::vector<int> *cell_list) {
-    for (int i = 0; i < n; i++) {
-        fx[i] = 0.0;
-        fy[i] = 0.0;
-    }
+void calculate_forces_linked_cell(int n, double L, double rc, Particle* particles, double* fx, double* fy, const std::vector<std::vector<int>>& cell_list) {
+    std::fill(fx, fx + n, 0.0);
+    std::fill(fy, fy + n, 0.0);
 
-    for (int cell_x = 0; cell_x < num_cells; cell_x++) {
-        for (int cell_y = 0; cell_y < num_cells; cell_y++) {
-            int cell_index = cell_x + cell_y * num_cells;
 
-            // Loop over neighboring cells (including itself)
-            for (int neighbor_x = -1; neighbor_x <= 1; neighbor_x++) {
-                for (int neighbor_y = -1; neighbor_y <= 1; neighbor_y++) {
-                    int neighbor_cell_x = (cell_x + neighbor_x + num_cells) % num_cells;
-                    int neighbor_cell_y = (cell_y + neighbor_y + num_cells) % num_cells;
-                    int neighbor_cell_index = neighbor_cell_x + neighbor_cell_y * num_cells;
+    int cell_x = 0, cell_y = 0, cell_index = 0, neighbor_x = 0, neighbor_y = 0, neighbor_index = 0;
+    double r = 0.0, dx = 0.0, dy = 0.0, f = 0.0;
 
-                    // Loop over particles in the current cell
-                    for (int i : cell_list[cell_index]) {
-                        // Loop over particles in the neighboring cell
-                        for (int j : cell_list[neighbor_cell_index]) {
-                            if (i < j) { // Avoid double-counting
-                                double r = distance(x[i], y[i], x[j], y[j], L);
-                                if (r > 0 && r < rc) { // Ensure r is not zero and within cutoff
-                                    double f = lj_force(r);
-                                    double dx = x[j] - x[i];
-                                    double dy = y[j] - y[i];
-                                    dx -= L * round(dx / L);
-                                    dy -= L * round(dy / L);
-                                    fx[i] += f * dx / r;
-                                    fy[i] += f * dy / r;
-                                    fx[j] -= f * dx / r;
-                                    fy[j] -= f * dy / r;
-                                }
-                            }
+    for (cell_x = 0; cell_x < num_cells; cell_x++) {
+        for (cell_y = 0; cell_y < num_cells; cell_y++) {
+            cell_index = cell_x + cell_y * num_cells;
+
+            for (const auto& offset : neighbor_offsets) {
+                neighbor_x = (cell_x + offset.first + num_cells) % num_cells;
+                neighbor_y = (cell_y + offset.second + num_cells) % num_cells;
+                neighbor_index = neighbor_x + neighbor_y * num_cells;
+
+                for (int i : cell_list[cell_index]) {
+                    for (int j : cell_list[neighbor_index]) {
+                        if (i >= j) continue;  // Avoid double-counting and self-interaction
+
+                        r = distance(particles[i].x, particles[i].y, particles[j].x, particles[j].y, L);
+                        if (r > 0 && r < rc) {
+                            f = lj_force(r);
+                            dx = particles[j].x - particles[i].x;
+                            dy = particles[j].y - particles[i].y;
+                            dx -= L * round(dx / L);
+                            dy -= L * round(dy / L);
+
+                            fx[i] += f * dx / r;
+                            fy[i] += f * dy / r;
+                            fx[j] -= f * dx / r;
+                            fy[j] -= f * dy / r;
                         }
                     }
                 }
@@ -167,73 +184,84 @@ void calculate_forces_linked_cell(int n, double L, double rc, double *x, double 
     }
 }
 
+
 // Function to update positions
-void update_positions(int n, double L, double dt, double *x, double *y, double *vx, double *vy, double *fx, double *fy) {
+void update_positions(int n, double L, double dt, Particle* particles, double* fx, double* fy) {
     for (int i = 0; i < n; i++) {
-        x[i] += vx[i] * dt + 0.5 * fx[i] * dt * dt / mass;
-        y[i] += vy[i] * dt + 0.5 * fy[i] * dt * dt / mass;
-        x[i] = x[i] - L * floor(x[i] / L); // Apply PBC
-        y[i] = y[i] - L * floor(y[i] / L); // Apply PBC
+        particles[i].x += particles[i].vx * dt + 0.5 * fx[i] * dt * dt / mass;
+        particles[i].y += particles[i].vy * dt + 0.5 * fy[i] * dt * dt / mass;
+
+        // Apply periodic boundary conditions correctly
+        particles[i].x = fmod(particles[i].x + L, L);
+        particles[i].y = fmod(particles[i].y + L, L);
     }
 }
 
+
 // Function to update velocities
-void update_velocities(int n, double dt, double *vx, double *vy, double *fx, double *fy, double *fx1, double *fy1) {
+void update_velocities(int n, double dt, Particle* particles, double *fx, double *fy, double *fx1, double *fy1) {
     for (int i = 0; i < n; i++) {
-        vx[i] += 0.5 * (fx[i] + fx1[i]) * dt / mass;
-        vy[i] += 0.5 * (fy[i] + fy1[i]) * dt / mass;
+        particles[i].vx += 0.5 * (fx[i] + fx1[i]) * dt / mass;
+        particles[i].vy += 0.5 * (fy[i] + fy1[i]) * dt / mass;
     }
 }
 
 // Function to run the simulation
-void run_simulation(int n, int steps, double dt, double L, double rc, int output_freq, int seed, double *x, double *y, double *vx, double *vy, char lattice_type, std::string basename) {
+void run_simulation(int n, int steps, double dt, double L, double rc, int output_freq, int seed, Particle* particles, char lattice_type, std::string basename) {
     srand(seed);
     double *fx = new double[n];
     double *fy = new double[n];
     double *fx1 = new double[n];
     double *fy1 = new double[n];
-    std::vector<int> *cell_list = new std::vector<int>[total_cells];
 
-    initialize_positions(n, L, x, y, lattice_type);
-    initialize_velocities(n, vx, vy);
+    double potential = 0.0, kinetic = 0.0, r = 0.0;
+
+    std::cout << "Running simulation..."<< std::endl;
+
+    std::vector<std::vector<int>> cell_list(total_cells);
+
+    initialize_positions(n, L, particles, lattice_type);
+    initialize_velocities(n, particles);
 
     std::string energy_filename = basename + "_energy.dat";
     std::string trajectory_filename = basename + "_trajectory.xyz";
     std::ofstream energy_file(energy_filename);
     std::ofstream trajectory_file(trajectory_filename);
+   
+
+    build_cell_list(n, L, particles, cell_list);
+    calculate_forces_linked_cell(n, L, rc, particles, fx, fy, cell_list);
 
     for (int step = 0; step < steps; step++) {
-        build_cell_list(n, L, x, y, cell_list);
-        calculate_forces_linked_cell(n, L, rc, x, y, fx, fy, cell_list);
-
         for (int i = 0; i < n; i++) {
             fx1[i] = fx[i];
             fy1[i] = fy[i];
         }
 
-        update_positions(n, L, dt, x, y, vx, vy, fx, fy);
-        calculate_forces_linked_cell(n, L, rc, x, y, fx, fy, cell_list);
-        update_velocities(n, dt, vx, vy, fx, fy, fx1, fy1);
+        update_positions(n, L, dt, particles, fx, fy);
+        build_cell_list(n, L, particles, cell_list);
+        calculate_forces_linked_cell(n, L, rc, particles, fx, fy, cell_list);
+        update_velocities(n, dt, particles, fx, fy, fx1, fy1);
 
         if (step % output_freq == 0) {
-            double energy = 0.0;
+            potential = 0.0;
             for (int i = 0; i < n; i++) {
                 for (int j = i + 1; j < n; j++) {
-                    double r = distance(x[i], y[i], x[j], y[j], L);
+                    r = distance(particles[i].x, particles[i].y, particles[j].x, particles[j].y, L);
                     if (r < rc) {
-                        energy += lj_potential(r);
+                        potential += lj_potential(r);
                     }
                 }
             }
-            double kinetic = 0.0;
+            kinetic = 0.0;
             for (int i = 0; i < n; i++) {
-                kinetic += 0.5 * mass * (vx[i] * vx[i] + vy[i] * vy[i]);
+                kinetic += 0.5 * mass * (particles[i].vx * particles[i].vx + particles[i].vy * particles[i].vy);
             }
-            energy_file << step << " " << energy + kinetic << std::endl;
+            energy_file << step << " " << potential + kinetic << std::endl;
 
             trajectory_file << n << "\n\n";
             for (int i = 0; i < n; i++) {
-                trajectory_file << "H " << x[i] << " " << y[i] << " 0.0\n";
+                trajectory_file << "H " << particles[i].x << " " << particles[i].y << " 0.0\n";
             }
         }
     }
@@ -244,22 +272,18 @@ void run_simulation(int n, int steps, double dt, double L, double rc, int output
     delete[] fy;
     delete[] fx1;
     delete[] fy1;
-    delete[] cell_list;
 }
 
 int main() {
-    double *x = new double[N];
-    double *y = new double[N];
-    double *vx = new double[N];
-    double *vy = new double[N];
-    char lattice_type = 't';
+    Particle* particles = new Particle[N];
+
     std::string outdir = "run/";
-    std::string basename = outdir + "link_2d";
+    std::string basename = outdir + "linked_cell_2d";
 
     // Start timing
     auto start = std::chrono::high_resolution_clock::now();
 
-    run_simulation(N, steps, dt, L, rc, output_freq, 12345, x, y, vx, vy, lattice_type, basename);
+    run_simulation(N, steps, dt, L, rc, output_freq, 12345, particles, lattice_type, basename);
 
     // End timing
     auto end = std::chrono::high_resolution_clock::now();
@@ -267,10 +291,7 @@ int main() {
 
     std::cout << "Simulation completed in " << elapsed.count() << " seconds." << std::endl;
 
-    delete[] x;
-    delete[] y;
-    delete[] vx;
-    delete[] vy;
+    delete[] particles;
 
     return 0;
 }
