@@ -5,6 +5,8 @@ Type
 ```
 make clean
   - This will clean all of your binary files.
+make cleanall
+  - This will clean all of your binary files and output results in run directory.
 make
   - This will create all the binaries in the bin/  directories.
 make test
