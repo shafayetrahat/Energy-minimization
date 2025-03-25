@@ -18,8 +18,7 @@ dt - time step ( default : 1e -4)
 L - box length ( default : 10.0)
 rc - Lennard - Jonnes cut - off distance ( default : 2.5)
 output_freq - output frequency ( default : 200)
-lattice_type - Lattice type initialization ( ’t ’ for triangular , ’s ’ for
-square ) ( default : ’t ’)
+lattice_type - Lattice type initialization ( ’t ’ for triangular , ’s ’ for square ) ( default : ’t ’)
 cell_size - per cell size
 num_cells - number of cell
 total_cells - total number of cells
