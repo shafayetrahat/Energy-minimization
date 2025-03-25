@@ -18,8 +18,8 @@ df1 = pd.read_csv(
     names=["box_size", "particle_number", "time"]  # Assign column names
 )
 
-df.box_size = df.box_size**2
-df1.box_size = df1.box_size**2
+df.box_size = df.box_size**3
+df1.box_size = df1.box_size**3
 
 # Create the plot
 plt.figure(figsize=(10, 6))
@@ -36,7 +36,7 @@ plt.plot(df1['box_size'], df1['time'], 'go-', alpha=0.8, markersize=8)
 #                  fontsize=9)
 
 # Add labels and title
-plt.xlabel('Box Size(Area)', fontsize=12)
+plt.xlabel('Box Size(Volume)', fontsize=12)
 plt.ylabel('Time(sec)', fontsize=12)
 plt.title('Simulation Time vs Box Size (Density=0.15)', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.6)

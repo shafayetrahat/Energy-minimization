@@ -8,22 +8,27 @@ RUNDIR = run
 all: lj_2d lj_3d  lj_2d_variable_box lj_3d_variable_box linked_cell_2d linked_cell_2d_variable_box linked_cell_3d linked_cell_3d_variable_box
 
 lj_2d: $(SRCDIR)/lj_2d.cpp
+	mkdir -p $(BINDIR) $(RUNDIR)
 	mkdir -p $(BINDIR) $(RUNDIR) 
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
 
 lj_2d_variable_box: $(SRCDIR)/lj_2d_variable_box.cpp
 	mkdir -p $(BINDIR) $(RUNDIR)
+	mkdir -p $(BINDIR) $(RUNDIR)
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
 
 lj_3d: $(SRCDIR)/lj_3d.cpp
+	mkdir -p $(BINDIR) $(RUNDIR)
 	mkdir -p $(BINDIR) $(RUNDIR)
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
 
 lj_3d_variable_box: $(SRCDIR)/lj_3d_variable_box.cpp
 	mkdir -p $(BINDIR) $(RUNDIR)
+	mkdir -p $(BINDIR) $(RUNDIR)
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
 
 linked_cell_2d: $(SRCDIR)/linked_cell_2d.cpp
+	mkdir -p $(BINDIR) $(RUNDIR)
 	mkdir -p $(BINDIR) $(RUNDIR)
 	$(CXX) $(CXXFLAGS) -o $(BINDIR)/$@ $< $(LDFLAGS)
 

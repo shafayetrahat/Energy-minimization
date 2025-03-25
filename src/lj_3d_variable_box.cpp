@@ -1,47 +1,26 @@
-/********************************************************************************************************************************
-Name: Lennard-Jones 2D
-Author: Mahadi torabi and Md Shafayet Islam
-Date: 2025-03-21
-Description:
-    A program to simulate an N number of particles in a 2D box with PBC using Lennard-Jones potential at zero pressure and 
-    temperature. The program will use the LeapFrog algorithm to integrate the equations of motion
-Usage:
-    The program will be executed from the command line as follows:
-    ./lj_3d_variable_box
-
-Output:
-    trajectory.xyz: The positions of the particles. .xyz format can be visualized using VMD
-    energy.dat: The program will also output the energy of the system.
-    
-Variables:
-    The program will is driven by these following global variables:
-    N - number of particles (default: 40)
-    steps - number of steps (default: 1e6)
-    dt - time step (default: 1e-4)
-    L - box length (default: 10.0)
-    rc - Lennard-Jonnes cut-off distance (default: 2.5)
-    output_freq - output frequency (default: 200)
-    lattice_type - Lattice type initialization('t' for triangular, 's' for square) (default: 't')
-
-
-*********************************************************************************************************************************/ 
-
-
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <chrono>
 
 
+
+
+
 // Constants
 double sigma = 1.0;
 double epsilon = 1.0;
 double mass = 1.0;
+//constexpr double kB = 1.0;
+
 int steps = 1e4;
 double dt = 0.0001;
+
 double rc = 2.5;
+//constexpr double T = 1.0;
 int output_freq = 100;
 char lattice_type = 'c'; // lattice type ('c' for cubic, 'h' for hexagonal)
+
 
 
 // function to initialize the positions of the particles on a grid equally spaced within the box
@@ -323,8 +302,8 @@ void run_simulation(int n, int steps, double dt, double L, double rc, double T, 
 
 int main()
 {
-    double L = 4.0;
-    int N = 13;
+    double L = 5.0;
+    int N = 19;
     double density = N / pow(L, 3);
 
     double *x = new double[N];
