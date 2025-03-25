@@ -36,23 +36,14 @@ Variables:
 
 // Constants
 double sigma = 1.0;
-
 double epsilon = 1.0;
-
 double mass = 1.0;
-
 int N = 40; // number of particles
-
 int steps = 1e6; // number of steps
-
 double dt = 1e-4; // time step
-
 double L = 10.0; // box length
-
 double rc = 2.5; // cut-off distance
-
 int output_freq = 200; // output frequency
-
 char lattice_type = 't'; // lattice type ('t' for triangular, 's' for square)
 
 
