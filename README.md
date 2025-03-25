@@ -1,5 +1,6 @@
 # Energy-minimization
 ## Description
+Detail description of the project is written in the https://github.com/shafayetrahat/Energy-minimization/blob/main/Project_3_report.pdf   file
 ## How to run
 Command to compile and run the simulation: 
 ```
