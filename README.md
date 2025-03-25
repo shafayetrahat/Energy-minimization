@@ -12,7 +12,7 @@ Descriptions of the commands:
 make clean
   - This will clean all of your binary files.
 make cleanall
-  - This will clean all of your binary files and output results in run directory.
+  - This will clean all of your binary files and output the results in the run directory.
 make
   - This will create all the binaries in the bin/  directories.
 make test
@@ -45,7 +45,7 @@ Linked-Cell algorithm outputs:
     lj_cell_<dim>_min_config.xyz: This file contains the configuration after the minimization has finished.
     lj_cell_<dim>_min_energy.dat: This file contains the energy of the minimized system.
 ```
-If you want to run an sing
+If you want to run a single binary code then you have to go to the "bin/" directory, create a "run/" directory there, and then run any binary file you want.
 ## Simulation Gallery
 ### Simulation of Lennard-Jones naive algorithm in 2d. The total particles are 20, 30, 40.
 
