@@ -1,7 +1,13 @@
 # Energy-minimization
 ## Description
 ## How to run
-Type 
+Command to compile and run the simulation: 
+```
+make clean
+make
+make test
+```
+Descriptions of the commands:
 ```
 make clean
   - This will clean all of your binary files.
